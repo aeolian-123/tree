@@ -82,7 +82,7 @@ canvas#cv{display:block;width:100%;height:auto;image-rendering:pixelated;image-r
 .namebox label{font-weight:900;font-size:15px}
 .namebox input{font:700 16px var(--f-cjk);color:var(--ink);background:#fffbe8;border:3px solid var(--ink);padding:6px 10px;width:12em;max-width:100%}
 .namebox input:focus-visible{outline:3px dashed var(--vest);outline-offset:2px}
-#tag{position:absolute;left:30%;top:42%;transform:translate(-50%,-100%);pointer-events:none;background:var(--ink);color:var(--helmet);font-weight:900;font-size:clamp(10px,1.6vw,15px);line-height:1.2;padding:2px 7px;border:2px solid #fff;white-space:nowrap}
+#tag{position:absolute;left:30%;top:36%;transform:translate(-50%,-100%);pointer-events:none;background:var(--ink);color:var(--helmet);font-weight:900;font-size:clamp(10px,1.6vw,15px);line-height:1.2;padding:2px 7px;border:2px solid #fff;white-space:nowrap}
 #tag::after{content:"";position:absolute;left:50%;top:100%;transform:translateX(-50%);border:5px solid transparent;border-top-color:var(--ink)}
 .cn{font-family:var(--f-pix);font-size:clamp(44px,11vw,112px);color:#fff;text-shadow:5px 0 0 var(--ink),-5px 0 0 var(--ink),0 5px 0 var(--ink),0 -5px 0 var(--ink),6px 6px 0 var(--ink);animation:pop .9s steps(6) forwards}
 .cn.go{font-family:var(--f-cjk);font-weight:900;color:var(--helmet)}
@@ -94,6 +94,7 @@ canvas#cv{display:block;width:100%;height:auto;image-rendering:pixelated;image-r
 .fin-arts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .fin-arts .cmp-art:first-child{box-shadow:5px 5px 0 #c4472f}
 .fin-arts .cmp-art:last-child{box-shadow:5px 5px 0 #2f6fd0}
+.fin-txt{margin:4px 0 0;font-size:clamp(15px,2vw,18px);font-weight:900;line-height:1.55}
 .fin-small{margin:0;font-size:14px;color:var(--muted);font-weight:500;line-height:1.7}
 .cmp{border:4px solid var(--ink);background:#f7fbf3;display:grid;gap:14px;padding:16px}
 .cmp h3{margin:0;font-size:clamp(18px,2.6vw,22px);font-weight:900;text-wrap:balance}
@@ -141,6 +142,27 @@ canvas#cv{display:block;width:100%;height:auto;image-rendering:pixelated;image-r
 .keys{font-family:var(--f-pix);font-size:9px;color:var(--muted);line-height:1.8}
 #sound{margin-left:auto;font:700 13px var(--f-cjk);background:var(--panel);color:var(--ink);border:3px solid var(--ink);padding:6px 10px;cursor:pointer}
 
+.board{display:grid;gap:12px}
+.board-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px}
+.board-head h3{margin:0;font-size:18px;font-weight:900}
+.board-status{margin:0;font-size:13px;color:var(--muted);font-weight:500}
+.board-mine{margin:0;font-weight:900;font-size:15px;background:#fffbe8;border:3px solid var(--ink);padding:8px 12px}
+.boards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.bcol{background:var(--panel);border:4px solid var(--ink);min-width:0}
+.bcol.hero{box-shadow:5px 5px 0 #1f8a39}.bcol.crush{box-shadow:5px 5px 0 #c4472f}
+.bt{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:8px 12px;border-bottom:4px solid var(--ink)}
+.bt b{font-size:18px;font-weight:900}
+.hero .bt{background:#e3f6dd}.crush .bt{background:#fde3dc}
+.bt span{font-size:12px;color:var(--muted);font-weight:700}
+.bcol ol{list-style:none;margin:0;padding:6px 0;counter-reset:r}
+.bcol li{display:grid;grid-template-columns:30px 1fr auto;align-items:center;gap:8px;padding:5px 12px;font-size:14px;counter-increment:r}
+.bcol li::before{content:counter(r);font-family:var(--f-pix);font-size:10px;width:24px;height:22px;display:grid;place-items:center;background:#edf1ea;color:var(--ink)}
+.bcol li:nth-child(1)::before{background:var(--helmet)}.bcol li:nth-child(2)::before{background:#d6dde6}.bcol li:nth-child(3)::before{background:#e6b98a}
+.bcol li .nm{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bcol li .vl{font-family:var(--f-pix);font-size:10px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.bcol li.me{background:#fffbe8;outline:2px solid var(--ink);outline-offset:-2px}
+.bcol li.empty{grid-template-columns:1fr;color:var(--muted);font-weight:500}
+.bcol li.empty::before{display:none}
 .guide{display:grid;gap:12px}
 .guide h3{margin:0;font-size:18px;font-weight:900}
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
@@ -152,7 +174,7 @@ canvas#cv{display:block;width:100%;height:auto;image-rendering:pixelated;image-r
 
 /* focus mode while a round runs: game fills the screen, centered */
 body.playing{overflow:hidden}
-body.playing .game{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:0;background:rgba(18,24,36,.94);border:none;box-shadow:none;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px));--gw:min(100%,calc((100dvh - 150px) * 16 / 9))}
+body.playing .game{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:0;background:rgba(18,24,36,.94);border:none;box-shadow:none;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px));--gw:min(100%,calc((100dvh - 150px) * 240 / 124))}
 body.playing .game>*{width:var(--gw);background:var(--panel);border-left:4px solid var(--ink);border-right:4px solid var(--ink)}
 body.playing .hud{border-top:4px solid var(--ink)}
 body.playing .controls{border-bottom:4px solid var(--ink)}
@@ -186,7 +208,7 @@ body.playing .stage{background:#8fd3ff}
       <div class="cell bad"><span class="lab">漏砍</span><span class="num" id="h-miss">0</span></div>
     </div>
     <div class="stage">
-      <canvas id="cv" width="320" height="180" aria-label="遊戲畫面"></canvas>
+      <canvas id="cv" width="240" height="124" aria-label="遊戲畫面"></canvas>
       <div id="fx"></div>
       <div id="tag" hidden></div>
       <div id="count" aria-live="assertive"></div>
@@ -214,6 +236,15 @@ body.playing .stage{background:#8fd3ff}
     </div>
   </section>
 
+  <section class="board" id="board" aria-label="排行榜">
+    <div class="board-head"><h3>排行榜</h3><p class="board-status" id="b-status">讀取中…</p></div>
+    <p class="board-mine" id="b-mine" hidden></p>
+    <div class="boards">
+      <div class="bcol hero"><div class="bt"><b>英雄榜</b><span>守護最多人車</span></div><ol id="b-hero"></ol></div>
+      <div class="bcol crush"><div class="bt"><b>壓扁榜</b><span>颱風壓到最多人車</span></div><ol id="b-crush"></ol></div>
+    </div>
+  </section>
+
   <section class="guide" aria-label="辨識指南">
     <h3>辨識指南</h3>
     <div class="cards">
@@ -231,7 +262,9 @@ body.playing .stage{background:#8fd3ff}
 (()=>{
 const cv=document.getElementById('cv');
 const ctx=cv.getContext('2d');
-const W=320,H=180,BASE=80;
+/* 排行榜：貼上 Google Apps Script 網頁應用程式網址（見 README），留空則停用 */
+const LEADERBOARD_URL='';
+const W=240,H=124,OY=32,PX=72,BASE=80;
 ctx.imageSmoothingEnabled=false;
 
 const rnd=(a,b)=>a+Math.random()*(b-a);
@@ -333,7 +366,7 @@ function reset(demo){
   G.mode=demo?'title':'play';
   G.t=0;
   G.player={x:100,walk:0,cd:0,swing:0,stun:0};
-  G.cam=G.player.x-96;
+  G.cam=G.player.x-PX;
   G.trees=[];G.peds=[];G.vehs=[];G.parts=[];G.spores=[];G.free=[];
   G.nextTreeX=G.cam-6;
   G.sickStart=G.player.x+90;G.birdStart=G.player.x+250;
@@ -372,7 +405,7 @@ function birdPos(t,b){
 
 /* ---------- ui helpers ---------- */
 const fx=document.getElementById('fx'),toastBox=document.getElementById('toast');
-function float(wx,y,text,cls){const el=document.createElement('div');el.className='ft '+(cls||'');el.textContent=text;el.style.left=((wx-G.cam)/W*100)+'%';el.style.top=(y/H*100)+'%';fx.appendChild(el);setTimeout(()=>el.remove(),1000)}
+function float(wx,y,text,cls){const el=document.createElement('div');el.className='ft '+(cls||'');el.textContent=text;el.style.left=((wx-G.cam)/W*100)+'%';el.style.top=((y-OY)/H*100)+'%';fx.appendChild(el);setTimeout(()=>el.remove(),1000)}
 function toast(text,cls,ms){while(toastBox.children.length>2)toastBox.firstChild.remove();const el=document.createElement('div');el.className='toast '+(cls||'');el.textContent=text;if(ms)el.style.animationDuration=ms+'ms';toastBox.appendChild(el);setTimeout(()=>el.remove(),ms||2800)}
 function tip(key,text,gap){const now=G.time;if(G.tips[key]&&now-G.tips[key]<gap)return;G.tips[key]=now;toast(text,'tip',4500)}
 function burst(x,y,n,cols,spd=40,g=120){for(let i=0;i<n;i++)G.parts.push({x,y,vx:rnd(-spd,spd),vy:rnd(-spd*1.4,-spd*.2),g,life:rnd(.35,.8),col:pick(cols),s:Math.random()<.3?2:1})}
@@ -472,10 +505,20 @@ function endGame(){
   document.getElementById('card').innerHTML=`
     <div class="fin">
       <h2 class="fin-title">辛苦了，維護安全的台北市公務員！</h2>
-      <div class="fin-arts"><canvas class="cmp-art" data-art="fell" width="96" height="48"></canvas><canvas class="cmp-art" data-art="cut" width="96" height="48"></canvas></div>
-      <p class="fin-small">2022 年新龍公園褐根病榕樹倒塌壓壞汽機車、民進黨議員要求公園處盤點移除病樹 vs. 2026 年美崙公園褐根病榕樹移除後被指控砍樹</p>
+      <div class="cmp-grid">
+        <article class="cmp-col fell">
+          <canvas class="cmp-art" data-art="fell" width="96" height="48"></canvas>
+          <p class="fin-txt">2022 年新龍公園褐根病榕樹倒塌壓壞汽機車、民進黨議員要求公園處盤點移除病樹</p>
+        </article>
+        <div class="vs">VS</div>
+        <article class="cmp-col cut">
+          <canvas class="cmp-art" data-art="cut" width="96" height="48"></canvas>
+          <p class="fin-txt">2026 年美崙公園褐根病榕樹移除後被指控砍樹</p>
+        </article>
+      </div>
       <button class="btn" id="again" type="button">再巡一次</button>
     </div>`;
+  submitScore();
   tagEl.hidden=true;document.body.classList.remove('playing');stageEl.classList.add('done');overlay.hidden=false;drawCompare();
   try{overlay.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})}catch(e){}
   document.getElementById('again').addEventListener('click',startGame);
@@ -490,8 +533,8 @@ function update(dt){
   }
   const P=G.player,play=G.mode==='play';
   if(play)G.t+=dt;
-  const sp=(P.stun>0||G.mode==='count')?0:34;
-  P.x+=sp*dt;P.walk+=sp*dt;G.cam=P.x-96;
+  const sp=(P.stun>0||G.mode==='count')?0:46;
+  P.x+=sp*dt;P.walk+=sp*dt;G.cam=P.x-PX;
   P.cd=Math.max(0,P.cd-dt);P.swing=Math.max(0,P.swing-dt);P.stun=Math.max(0,P.stun-dt);
   G.shake=Math.max(0,G.shake-dt);G.flash=Math.max(0,G.flash-dt);G.light=Math.max(0,G.light-dt);
   genTrees();
@@ -641,7 +684,7 @@ function drawPlayer(sx){
 }
 function draw(){
   const ox=G.shake>0?ri(-1,1):0,oy=G.shake>0?ri(-1,1):0;
-  ctx.setTransform(1,0,0,1,ox,oy);
+  ctx.setTransform(1,0,0,1,ox,oy-OY);
   drawBG();drawGround();
   const cam=G.cam,vis=x=>x>-30&&x<W+30;
   for(const t of G.trees){const sx=Math.round(t.x-cam);if(!vis(sx)||t.offscreen)continue;if(t.cut)drawStump(t,sx);else if(!t.falling&&!t.fallen)drawTreeUp(t,sx)}
@@ -668,13 +711,13 @@ function draw(){
   }
   // weather
   if(G.storm>.01){
-    rect(-2,-2,W+4,H+4,`rgba(28,42,74,${.3*G.storm})`);
+    rect(-2,OY-2,W+4,H+4,`rgba(28,42,74,${.3*G.storm})`);
     ctx.fillStyle=`rgba(226,242,255,${.75*G.storm})`;
     const n=Math.floor(G.storm*G.rain.length);
-    for(let i=0;i<n;i++){const r=G.rain[i];const x=Math.round(r.x),y=Math.round(r.y);ctx.fillRect(x,y,1,2);ctx.fillRect(x-1,y+2,1,2)}
+    for(let i=0;i<n;i++){const r=G.rain[i];const x=Math.round(r.x),y=Math.round(r.y)+OY;ctx.fillRect(x,y,1,2);ctx.fillRect(x-1,y+2,1,2)}
   }
-  if(G.light>0)rect(-2,-2,W+4,H+4,`rgba(255,255,255,${G.light*2})`);
-  if(G.flash>0)rect(-2,-2,W+4,H+4,`rgba(229,72,77,${G.flash})`);
+  if(G.light>0)rect(-2,OY-2,W+4,H+4,`rgba(255,255,255,${G.light*2})`);
+  if(G.flash>0)rect(-2,OY-2,W+4,H+4,`rgba(229,72,77,${G.flash})`);
 }
 
 /* ---------- HUD & loop ---------- */
@@ -751,6 +794,43 @@ document.querySelectorAll('.gi canvas[data-bird]').forEach(c=>{
   c.width=26;c.height=18;const x=c.getContext('2d');
   x.drawImage(BIRDS[0][0],2,3);x.drawImage(BIRDS[1][1],14,1);x.drawImage(BIRDS[0][1],9,11);
 });
+
+/* ---------- leaderboard ---------- */
+const bStatus=$('b-status'),bMine=$('b-mine'),bHero=$('b-hero'),bCrush=$('b-crush');
+let myRunId=null;
+function li(text,cls){const l=document.createElement('li');l.className=cls||'';l.textContent=text;return l}
+function fillList(ol,rows,kind){
+  ol.innerHTML='';
+  if(!rows||!rows.length){ol.appendChild(li(kind==='hero'?'還沒有人上榜，成為第一位英雄！':'還沒有人上榜','empty'));return}
+  rows.forEach(r=>{
+    const el=document.createElement('li');if(r.id&&r.id===myRunId)el.className='me';
+    const nm=document.createElement('span');nm.className='nm';nm.textContent=r.name||'清除隊員';
+    const vl=document.createElement('span');vl.className='vl';
+    vl.textContent=kind==='hero'?`${r.protP}人 ${r.protC}車`:`${r.crushP}人 ${r.crushC}車`;
+    el.append(nm,vl);ol.appendChild(el);
+  });
+}
+async function loadBoard(){
+  if(!LEADERBOARD_URL){bStatus.textContent='排行榜在正式發布版本啟用。';fillList(bHero,[],'hero');fillList(bCrush,[],'crush');return}
+  bStatus.textContent='讀取中…';
+  try{
+    const r=await fetch(LEADERBOARD_URL+'?n=10',{cache:'no-store'});
+    const d=await r.json();
+    fillList(bHero,d.hero,'hero');fillList(bCrush,d.crush,'crush');
+    bStatus.textContent='每局結束自動上傳成績，各列前 10 名。';
+  }catch(e){bStatus.textContent='排行榜暫時連不上，請稍後重新整理。'}
+}
+async function submitScore(){
+  const s=G.st;myRunId=Math.random().toString(36).slice(2,10)+Date.now().toString(36);
+  bMine.hidden=false;bMine.textContent=`${G.name} 這局：守護 ${s.protP} 人 ${s.protC} 車・壓到 ${s.crushP} 人 ${s.crushC} 車`;
+  if(!LEADERBOARD_URL){loadBoard();return}
+  bStatus.textContent='上傳成績中…';
+  try{
+    await fetch(LEADERBOARD_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({id:myRunId,name:G.name,protP:s.protP,protC:s.protC,crushP:s.crushP,crushC:s.crushC})});
+  }catch(e){}
+  loadBoard();
+}
+loadBoard();
 
 reset(true);
 requestAnimationFrame(frame);
