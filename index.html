@@ -89,6 +89,12 @@ canvas#cv{display:block;width:100%;height:auto;image-rendering:pixelated;image-r
 @keyframes pop{0%{transform:scale(1.6);opacity:0}25%{transform:scale(1);opacity:1}80%{opacity:1}100%{opacity:0}}
 .stage.done #overlay{position:static;display:block;background:var(--panel);border-top:4px solid var(--ink);padding-block:20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .stage.done .card{max-width:none;box-shadow:none;border:none;padding:0;gap:18px}
+.fin{display:grid;gap:16px;max-width:860px;margin:0 auto}
+.fin-title{margin:0;font-size:clamp(24px,4.4vw,40px);font-weight:900;line-height:1.25;text-wrap:balance;text-shadow:3px 3px 0 var(--helmet)}
+.fin-arts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.fin-arts .cmp-art:first-child{box-shadow:5px 5px 0 #c4472f}
+.fin-arts .cmp-art:last-child{box-shadow:5px 5px 0 #2f6fd0}
+.fin-small{margin:0;font-size:14px;color:var(--muted);font-weight:500;line-height:1.7}
 .cmp{border:4px solid var(--ink);background:#f7fbf3;display:grid;gap:14px;padding:16px}
 .cmp h3{margin:0;font-size:clamp(18px,2.6vw,22px);font-weight:900;text-wrap:balance}
 .cmp-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:stretch}
@@ -464,53 +470,12 @@ function endGame(){
   const grade=score>=380?['S','行道樹守護神']:score>=240?['A','可靠的清除隊員']:score>=100?['B','還算稱職，再練練']:['C','颱風過後一片狼藉'];
   const sub=s.fell?`颱風吹倒了 ${s.fell} 棵沒砍掉的病樹，壓到 <b>${s.crushP}</b> 位路人、<b>${s.crushC}</b> 輛車。`:'颱風來的時候，路上沒有一棵病樹倒下。';
   document.getElementById('card').innerHTML=`
-    <div class="eyebrow">PATROL COMPLETE</div>
-    <div class="result" style="display:grid;gap:12px">
-      <div class="hero">${esc(G.name)} 守護了<b>${s.protP}</b>位路人、<b>${s.protC}</b>輛車</div>
-      <p class="sub">${sub}</p>
-      <div class="grade"><div class="g">${grade[0]}</div><span>${grade[1]}</span></div>
-      <dl class="stats">
-        <div><dt>砍除病樹</dt><dd>${s.cut}</dd></div>
-        <div><dt>差點砍到健康樹</dt><dd>${s.wrong}</dd></div>
-        <div><dt>漏砍病樹</dt><dd>${s.missed}</dd></div>
-        <div><dt>被感染的樹</dt><dd>${s.infected}</dd></div>
-        <div><dt>趕走青鳥</dt><dd>${s.shoo}</dd></div>
-        <div><dt>倒塌病樹</dt><dd>${s.fell}</dd></div>
-      </dl>
-      ${rn?`<p class="risk">路上還有 ${rn} 棵病樹沒處理，下一次颱風可能再壓到約 ${rp} 人、${rc} 輛車。</p>`:''}
+    <div class="fin">
+      <h2 class="fin-title">辛苦了，維護安全的台北市公務員！</h2>
+      <div class="fin-arts"><canvas class="cmp-art" data-art="fell" width="96" height="48"></canvas><canvas class="cmp-art" data-art="cut" width="96" height="48"></canvas></div>
+      <p class="fin-small">2022 年新龍公園褐根病榕樹倒塌壓壞汽機車、民進黨議員要求公園處盤點移除病樹 vs. 2026 年美崙公園褐根病榕樹移除後被指控砍樹</p>
       <button class="btn" id="again" type="button">再巡一次</button>
-    </div>
-    <section class="cmp" aria-label="新聞對照">
-      <div class="eyebrow">新聞對照</div>
-      <h3>同樣是染上褐根病的榕樹</h3>
-      <div class="cmp-grid">
-        <article class="cmp-col fell">
-          <canvas class="cmp-art" data-art="fell" width="96" height="48"></canvas>
-          <div class="cmp-year">2022.07.30</div>
-          <div class="cmp-place">台北市大安區・新龍公園</div>
-          <h4>沒移除：深夜倒塌，壓壞汽機車</h4>
-          <ul>
-            <li>兩棵約三層樓高的榕樹倒下，壓壞多輛汽車車頂和機車車頭。</li>
-            <li>公園處證實兩棵樹都感染褐根病，根部嚴重腐朽。</li>
-            <li>民進黨台北市議員簡舒培要求公園處盤點公園褐根病樹，避免再發生倒樹。</li>
-          </ul>
-          <a href="https://www.cna.com.tw/news/aloc/202207300171.aspx" target="_blank" rel="noopener">中央社報導 ↗</a>
-        </article>
-        <div class="vs">VS</div>
-        <article class="cmp-col cut">
-          <canvas class="cmp-art" data-art="cut" width="96" height="48"></canvas>
-          <div class="cmp-year">2026.10.19</div>
-          <div class="cmp-place">台北市士林區・美崙公園</div>
-          <h4>先移除：被質疑砍掉「總統樹」</h4>
-          <ul>
-            <li>1995 年由李登輝、李元簇種下的兩棵榕樹被移除，只剩空樹穴，引發網路批評。</li>
-            <li>公園處緊急說明：兩棵樹都罹患褐根病，2024 年 12 月廠商報告已建議移除，是為了民眾安全。</li>
-          </ul>
-          <a href="https://tw.news.yahoo.com/share/5c2353d3-ecfb-3cc8-85ef-9048cfcd47df" target="_blank" rel="noopener">民視新聞（Yahoo 新聞）↗</a>
-        </article>
-      </div>
-      <p class="cmp-foot">一棵倒在車上，一棵在倒下前移除。</p>
-    </section>`;
+    </div>`;
   tagEl.hidden=true;document.body.classList.remove('playing');stageEl.classList.add('done');overlay.hidden=false;drawCompare();
   try{overlay.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})}catch(e){}
   document.getElementById('again').addEventListener('click',startGame);
