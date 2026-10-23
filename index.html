@@ -1,0 +1,692 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>褐根病清除隊</title>
+<meta name="description" content="60 秒像素風巡邏小遊戲：砍掉褐根病樹、避開健康樹、驅趕綠鳥，撐過颱風，看看你守護了多少路人和車輛。">
+<meta name="theme-color" content="#eef5e6">
+<meta property="og:type" content="website">
+<meta property="og:title" content="褐根病清除隊">
+<meta property="og:description" content="砍掉褐根病樹，別讓颱風把它們吹倒在路人和車子身上。60 秒像素風小遊戲。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'%3E%3Crect x='4' y='1' width='8' height='2' fill='%23a8742e'/%3E%3Crect x='2' y='3' width='12' height='5' fill='%23c08a3e'/%3E%3Crect x='3' y='8' width='10' height='2' fill='%236e4823'/%3E%3Crect x='7' y='10' width='2' height='5' fill='%237a5230'/%3E%3Crect x='5' y='14' width='6' height='1' fill='%23e0b35a'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&family=Press+Start+2P&display=swap">
+<style>
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font-size:14px}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+<style>
+/* Layout: one arcade cabinet column — header, framed game (HUD / stage / controls), field guide below.
+   Single bright daytime look by choice: every color set explicitly. */
+:root{
+  --bg:#eef5e6;
+  --ink:#1d2433;
+  --panel:#ffffff;
+  --vest:#ff7a2f;
+  --leaf:#2fae4a;
+  --rot:#9a6a2e;
+  --helmet:#ffcf3a;
+  --muted:#56616d;
+  --bad:#e5484d;
+  --f-cjk:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --f-pix:"Press Start 2P",ui-monospace,"Courier New",monospace;
+  color-scheme:light;
+}
+html,body{background:var(--bg);color:var(--ink)}
+body{font-family:var(--f-cjk);line-height:1.6}
+.wrap{max-width:980px;margin:0 auto;padding-block:22px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:18px}
+.head{display:grid;gap:6px}
+.eyebrow{font-family:var(--f-pix);font-size:10px;letter-spacing:.08em;color:var(--rot)}
+h1{margin:0;font-weight:900;font-size:clamp(28px,5.4vw,44px);line-height:1.15;letter-spacing:.04em;text-shadow:3px 3px 0 var(--helmet);text-wrap:balance}
+.head p{margin:0;color:var(--muted);max-width:60ch;font-weight:500}
+
+.game{border:4px solid var(--ink);background:var(--panel);box-shadow:6px 6px 0 var(--ink);min-width:0}
+.hud{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;padding:10px 12px;border-bottom:4px solid var(--ink);font-size:13px;font-weight:700}
+.hud .cell{display:flex;align-items:baseline;gap:6px;white-space:nowrap}
+.hud .lab{color:var(--muted);font-weight:700}
+.num{font-family:var(--f-pix);font-size:12px;font-variant-numeric:tabular-nums}
+.timebox{display:flex;align-items:center;gap:10px;flex:1 1 220px;min-width:0}
+.bar{position:relative;flex:1;height:14px;border:3px solid var(--ink);background:#dcefd6}
+.bar .fill{position:absolute;inset:0 auto 0 0;width:0;background:var(--leaf)}
+.bar .mark{position:absolute;left:50%;top:-3px;bottom:-3px;width:3px;background:var(--ink)}
+.bar .mark span{position:absolute;bottom:calc(100% + 1px);left:50%;transform:translateX(-50%);font-size:10px;font-weight:900;color:#2b4fb8;white-space:nowrap}
+.bar.storm .fill{background:#4a6fd8}
+.hud .bad .num{color:var(--bad)}
+.hud .good .num{color:#1f8a39}
+
+.stage{position:relative;background:#8fd3ff;overflow:hidden}
+canvas#cv{display:block;width:100%;height:auto;image-rendering:pixelated;image-rendering:crisp-edges;touch-action:manipulation;cursor:pointer}
+#fx{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.ft{position:absolute;transform:translate(-50%,-100%);font-weight:900;font-size:clamp(11px,1.7vw,16px);color:#fff;white-space:nowrap;text-shadow:2px 0 0 var(--ink),-2px 0 0 var(--ink),0 2px 0 var(--ink),0 -2px 0 var(--ink),2px 2px 0 var(--ink);animation:rise 1s steps(8) forwards}
+.ft.good{color:#b6ef8a}.ft.bad{color:#ff9a9a}.ft.warn{color:#ffd95a}
+@keyframes rise{0%{opacity:1;margin-top:0}70%{opacity:1}100%{opacity:0;margin-top:-22px}}
+#toast{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:94%;display:grid;gap:6px;justify-items:center;pointer-events:none}
+.toast{background:var(--ink);color:#fff;border:2px solid #fff;padding:5px 10px;font-weight:700;font-size:clamp(11px,1.6vw,14px);box-shadow:3px 3px 0 rgba(29,36,51,.35);text-align:center;animation:tin 2.8s steps(10) forwards}
+.toast.bad{background:#8f2226}
+.toast.tip{background:#fffbe8;color:var(--ink);border:3px solid var(--ink);font-size:clamp(12px,2vw,17px);font-weight:900;padding:8px 14px;max-width:34em;line-height:1.45;box-shadow:4px 4px 0 var(--ink)}
+.toast.big{background:#24346b;color:var(--helmet);font-size:clamp(18px,4vw,34px);font-weight:900;padding:8px 18px;border-width:3px;letter-spacing:.06em}
+@keyframes tin{0%{opacity:0;transform:translateY(-6px)}8%{opacity:1;transform:none}85%{opacity:1}100%{opacity:0}}
+
+#overlay{position:absolute;inset:0;display:grid;place-items:center;padding:16px;background:rgba(29,36,51,.5);overflow:auto}
+.card{background:var(--panel);border:4px solid var(--ink);box-shadow:6px 6px 0 var(--ink);padding:18px 22px;width:100%;max-width:540px;display:grid;gap:12px}
+.card h2{margin:0;font-size:clamp(20px,3vw,26px);font-weight:900;line-height:1.25;text-wrap:balance}
+.rules{margin:0;padding:0;list-style:none;display:grid;gap:7px;font-size:14px;font-weight:500}
+.rules li{display:grid;grid-template-columns:14px 1fr;gap:10px;align-items:start}
+.rules .dot{width:12px;height:12px;margin-top:5px;border:2px solid var(--ink)}
+.btn{font:900 18px var(--f-cjk);color:var(--ink);background:var(--helmet);border:4px solid var(--ink);box-shadow:0 5px 0 var(--ink);padding:10px 22px;cursor:pointer;justify-self:start}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--ink)}
+.btn:focus-visible,#chop:focus-visible,#sound:focus-visible{outline:3px dashed var(--vest);outline-offset:3px}
+
+.result .hero{font-size:clamp(18px,2.6vw,22px);font-weight:900;line-height:1.4}
+.result .hero b{font-family:var(--f-pix);font-size:clamp(20px,3.2vw,30px);color:#1f8a39;font-weight:400;padding:0 4px}
+.result .sub{margin:0;font-weight:500}
+.result .sub b{color:var(--bad)}
+.grade{display:flex;align-items:center;gap:12px}
+.grade .g{font-family:var(--f-pix);font-size:26px;width:52px;height:52px;display:grid;place-items:center;background:var(--ink);color:var(--helmet)}
+.grade span{font-weight:900;font-size:16px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px 16px;margin:0}
+.stats div{display:flex;justify-content:space-between;gap:8px;border-bottom:2px dotted #c9d2c3;padding-block:3px;font-size:14px}
+.stats dt{font-weight:500;color:var(--muted)}
+.stats dd{margin:0;font-family:var(--f-pix);font-size:12px;font-variant-numeric:tabular-nums}
+.risk{margin:0;font-size:13px;color:var(--muted);font-weight:500}
+
+.controls{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:12px;border-top:4px solid var(--ink)}
+#chop{font:900 24px var(--f-cjk);color:#fff;background:var(--vest);border:4px solid var(--ink);box-shadow:0 6px 0 var(--ink);padding:10px 40px;cursor:pointer;letter-spacing:.2em;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+#chop:active{transform:translateY(5px);box-shadow:0 1px 0 var(--ink)}
+.keys{font-family:var(--f-pix);font-size:9px;color:var(--muted);line-height:1.8}
+#sound{margin-left:auto;font:700 13px var(--f-cjk);background:var(--panel);color:var(--ink);border:3px solid var(--ink);padding:6px 10px;cursor:pointer}
+
+.guide{display:grid;gap:12px}
+.guide h3{margin:0;font-size:18px;font-weight:900}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.gi{background:var(--panel);border:3px solid var(--ink);padding:10px 12px;display:grid;gap:4px;align-content:start}
+.gi canvas{height:84px;width:auto;max-width:100%;image-rendering:pixelated;image-rendering:crisp-edges;justify-self:start}
+.gi b{font-size:15px}
+.gi p{margin:0;font-size:13px;color:var(--muted);font-weight:500}
+.note{margin:0;font-size:13px;color:var(--muted);max-width:68ch}
+
+@media (max-width:640px){
+  #overlay{position:static;background:var(--panel);border-top:4px solid var(--ink);padding:14px 12px}
+  .card{box-shadow:none;border:none;padding:0}
+  #chop{flex:1 1 auto}
+  .hud{font-size:12px;gap:6px 14px}
+}
+@media (prefers-reduced-motion:reduce){.ft,.toast{animation-timing-function:step-end}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header class="head">
+    <div class="eyebrow">BROWN ROOT ROT PATROL</div>
+    <h1>褐根病清除隊</h1>
+    <p>沿著行道樹一路往前巡，砍掉染上褐根病的樹，別讓颱風把它們吹倒在路人和車子身上。</p>
+  </header>
+
+  <section class="game" aria-label="遊戲">
+    <div class="hud">
+      <div class="timebox">
+        <span class="lab">剩餘</span><span class="num" id="h-time">60</span>
+        <div class="bar" id="bar"><div class="fill" id="h-fill"></div><div class="mark"><span>颱風</span></div></div>
+      </div>
+      <div class="cell good"><span class="lab">砍除病樹</span><span class="num" id="h-cut">0</span></div>
+      <div class="cell good"><span class="lab">守護</span><span class="num" id="h-guard">0人 0車</span></div>
+      <div class="cell bad"><span class="lab">誤砍</span><span class="num" id="h-wrong">0</span></div>
+      <div class="cell bad"><span class="lab">漏砍</span><span class="num" id="h-miss">0</span></div>
+    </div>
+    <div class="stage">
+      <canvas id="cv" width="320" height="180" aria-label="遊戲畫面"></canvas>
+      <div id="fx"></div>
+      <div id="toast" aria-live="polite"></div>
+      <div id="overlay">
+        <div class="card" id="card">
+          <div class="eyebrow">任務簡報</div>
+          <h2>巡邏 60 秒，清掉路上的褐根病樹</h2>
+          <ul class="rules">
+            <li><span class="dot" style="background:#a8742e"></span><span>葉子枯黃、樹根長出褐色菌絲的是病樹，走到樹前按「砍」。末期病樹要砍兩下。</span></li>
+            <li><span class="dot" style="background:#5cc04f"></span><span>綠葉飽滿的健康樹不要砍。</span></li>
+            <li><span class="dot" style="background:#27a845;border-radius:50%"></span><span>綠色鳥群會圍住病樹不讓你砍，連按把牠們趕走。</span></li>
+            <li><span class="dot" style="background:#ffcf3a"></span><span>漏砍的病樹會惡化，還會把病傳給旁邊的健康樹。</span></li>
+            <li><span class="dot" style="background:#4a6fd8"></span><span>第 30 秒颱風來襲，沒砍掉的病樹會倒向路人和車輛。</span></li>
+          </ul>
+          <button class="btn" id="start" type="button">開始巡邏</button>
+        </div>
+      </div>
+    </div>
+    <div class="controls">
+      <button id="chop" type="button" aria-label="砍">砍！</button>
+      <span class="keys">SPACE / J<br>也可以點畫面</span>
+      <button id="sound" type="button" aria-pressed="true">音效：開</button>
+    </div>
+  </section>
+
+  <section class="guide" aria-label="辨識指南">
+    <h3>辨識指南</h3>
+    <div class="cards">
+      <div class="gi"><canvas data-stage="0"></canvas><b>健康樹</b><p>樹冠飽滿翠綠，樹基乾淨。不要砍。</p></div>
+      <div class="gi"><canvas data-stage="1"></canvas><b>褐根病・初期</b><p>葉片開始黃化，樹基出現褐色菌絲。砍一下。</p></div>
+      <div class="gi"><canvas data-stage="2"></canvas><b>褐根病・中期</b><p>葉色黃褐、樹冠變稀，菌絲往上爬。砍一下。</p></div>
+      <div class="gi"><canvas data-stage="3"></canvas><b>褐根病・末期</b><p>葉子幾乎掉光，樹基被菌絲面包住。要砍兩下。</p></div>
+      <div class="gi"><canvas data-bird="1"></canvas><b>綠鳥群</b><p>偶爾圍著病樹打轉不讓砍。每按一下趕走兩隻。</p></div>
+    </div>
+    <p class="note">褐根病由有害木層孔菌引起，會讓根系腐朽，樹看起來還站著，颱風一來就容易整棵倒下。病菌會透過根部接觸傳給鄰近的樹，所以漏掉一棵，旁邊的樹也會跟著遭殃。</p>
+  </section>
+</main>
+
+<script>
+(()=>{
+const cv=document.getElementById('cv');
+const ctx=cv.getContext('2d');
+const W=320,H=180,BASE=80;
+ctx.imageSmoothingEnabled=false;
+
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const ri=(a,b)=>Math.floor(rnd(a,b+1));
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const hash=i=>{const s=Math.sin(i*12.9898)*43758.5453;return s-Math.floor(s)};
+function mulberry(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function hex(c){return[parseInt(c.slice(1,3),16),parseInt(c.slice(3,5),16),parseInt(c.slice(5,7),16)]}
+function mix(a,b,t){const A=hex(a),B=hex(b);return`rgb(${A.map((v,i)=>Math.round(v+(B[i]-v)*t)).join(',')})`}
+function shade(c,f){return'#'+hex(c).map(v=>Math.max(0,Math.min(255,Math.round(v*f))).toString(16).padStart(2,'0')).join('')}
+
+/* ---------- sprites ---------- */
+const PAL={k:'#1d2433',y:'#ffcf3a',Y:'#e0a91b',s:'#f2c29b',o:'#ff7a2f',O:'#d85a17',w:'#f4f4f4',b:'#3b5bdb',B:'#2b44a8',n:'#3a2a22',h:'#3a2a22',d:'#8a5a2b',g:'#c9d1db',G:'#ffffff',W:'#bfe6ff',l:'#fff3a0',r:'#ff5a5a',u:'#6b7480',U:'#e9edf2'};
+function sprite(rows,pal={}){
+  const w=Math.max(...rows.map(r=>r.length)),h=rows.length;
+  const c=document.createElement('canvas');c.width=w;c.height=h;
+  const x=c.getContext('2d');
+  rows.forEach((r,j)=>{for(let i=0;i<r.length;i++){const ch=r[i];if(ch==='.')continue;const col=pal[ch]||PAL[ch];if(!col)continue;x.fillStyle=col;x.fillRect(i,j,1,1)}});
+  return c;
+}
+function flip(c){const f=document.createElement('canvas');f.width=c.width;f.height=c.height;const x=f.getContext('2d');x.translate(c.width,0);x.scale(-1,1);x.drawImage(c,0,0);return f}
+
+const P_HEAD=["...kkkkkk...","..kyyyyyyk..",".kyyyyyyyyk.","kYYYYYYYYYYk",".khhssssk...",".khsssksk...",".kssssssk...","..kksssk....",".kooowwok...","kooowwoook..","koOowwoOsk..",".kOOOOOOk...",".kbbbbbbk..."];
+const P_A=sprite(P_HEAD.concat([".kbbk.kbbk..",".kbk...kbk..",".nnk...nnnk."]));
+const P_B=sprite(P_HEAD.concat(["..kbbbbbk...","..kbk.kbk...","..nnk.nnk..."]));
+const AXE=sprite(["...ggg","..dgGg","..dgg.","..d...","..d...","..d...","..d...","..d..."]);
+
+const PED_TOP=["..kkkk..",".khhhhk.",".khhssk.",".khsksk.",".kssssk.","..kssk..",".kcccck.","kcccccck","ksccccsk",".kcccck.",".kppppk."];
+const PED_A=PED_TOP.concat([".kpkkpk.",".kpk.kpk",".nn...nn"]);
+const PED_B=PED_TOP.concat(["..kppk..","..kpk...","..nnk..."]);
+const HAIR=['#3a2a22','#6b4423','#1d2433','#c98a3a','#9aa3ad'];
+const SHIRT=['#e5484d','#3b82f6','#a855f7','#22b8a0','#f59e0b','#ec4899','#f4f4f4','#64748b'];
+const PANTS=['#334155','#1e3a8a','#6b7280','#78350f','#1d2433'];
+const SKIN=['#f2c29b','#d9a77a','#b98256'];
+const cache={};
+function pedSprite(p,f){
+  const key=`p${p.hc}${p.cc}${p.pc}${p.sc}${f}${p.dir}`;
+  if(!cache[key]){const s=sprite(f?PED_B:PED_A,{h:p.hc,c:p.cc,p:p.pc,s:p.sc});cache[key]=p.dir<0?flip(s):s}
+  return cache[key];
+}
+const CAR=["......kkkkkkkkk.........",".....kWWWWkWWWWWk.......","....kWWWWWkWWWWWWk......","..kkcccccccccccccckkk...",".kcccccccccccccccccccck.","krcccccccccccccccccccclk","kcccccccccccccccccccccck","kCCCCCCCCCCCCCCCCCCCCCCk",".kCCkkkkCCCCCCCCkkkkCCk.","..kkuuukkkkkkkkkuuukk...","...kuUuk........kuUuk...","....kkk..........kkk...."];
+const SCOOT=["....kkkk......","...kyyyyk.....","...kyyssk.....","....kssk......","...kcccck.....","...kcccsskk...","...kppppk.k...","..kkppppkkvk..",".kvvvvvvvvvvk.",".kvvvvvvvvvvlk","..kkuukkkkuuk.","..kuUuk..kuUuk","...kkk....kkk."];
+const CARCOL=['#ff5a5a','#3b82f6','#ffcf3a','#22b8a0','#f4f4f4','#a855f7','#fb923c'];
+function vehSprite(v){
+  const key=`v${v.type}${v.col}${v.helm||''}${v.shirt||''}${v.lane}`;
+  if(!cache[key]){
+    const s=v.type==='car'?sprite(CAR,{c:v.col,C:shade(v.col,.78)}):sprite(SCOOT,{v:v.col,y:v.helm,c:v.shirt,p:'#334155'});
+    cache[key]=v.lane===1?flip(s):s;
+  }
+  return cache[key];
+}
+const BIRD_PAL={g:'#8be38f',G:'#27a845',o:'#ffb02e'};
+const BIRD_A=sprite(["gg....",".gg...","..GGko",".GGGG.","......"],BIRD_PAL);
+const BIRD_B=sprite(["......","..GGko",".GGGG.",".gg...","gg...."],BIRD_PAL);
+const BIRDS=[[BIRD_A,BIRD_B],[flip(BIRD_A),flip(BIRD_B)]];
+
+/* ---------- trees ---------- */
+function buildTree(t){
+  const r=mulberry(t.seed+t.stage*7919);
+  const cw=t.cw,ch=t.ch,th=t.th,st=t.stage;
+  const w=cw+6,h=ch+th-2;
+  const c=document.createElement('canvas');c.width=w;c.height=h;
+  const x=c.getContext('2d');
+  const px=(a,b,col)=>{x.fillStyle=col;x.fillRect(a,b,1,1)};
+  const tx=Math.floor(w/2)-2;
+  for(let y=ch-3;y<h;y++)for(let i=0;i<4;i++)px(tx+i,y,i===0?'#5a3a20':i===3?'#a5743f':'#7a5230');
+  [[-1,h-1],[-2,h-1],[4,h-1],[5,h-1],[-1,h-2],[4,h-2]].forEach(([i,y])=>px(tx+i,y,i<0?'#5a3a20':'#7a5230'));
+  // branches (show through a thinning crown)
+  for(let k=0;k<ch*.6;k++){px(tx+1-Math.floor(k/2),ch-3-k,'#5a3a20');px(tx+2+Math.floor(k/2.2),ch-2-k,'#5a3a20')}
+  if(st>0){
+    const mh=2+st*3;
+    for(let y=h-mh;y<h;y++){
+      const lo=y>=h-2?-2:0,hi=y>=h-2?5:3;
+      for(let i=lo;i<=hi;i++){if(r()<.5+(y-(h-mh))/mh*.45)px(tx+i,y,['#c58b3c','#a8742e','#e0b35a','#7a4f22'][Math.floor(r()*4)])}
+    }
+  }
+  const holes=[0,.03,.2,.48][st],yel=[0,.3,.38,.15][st],brn=[0,.06,.4,.78][st];
+  for(let y=0;y<ch;y++)for(let i=0;i<cw;i++){
+    const dx=(i+.5-cw/2)/(cw/2),dy=(y+.5-ch/2)/(ch/2),d=dx*dx+dy*dy;
+    if(d>1+(r()-.5)*.32)continue;
+    if(r()<holes&&d>.12)continue;
+    const sh=(y/ch)*.75+(i/cw)*.35+(r()-.5)*.25;const q=r();let col;
+    if(st>0&&q<brn)col=sh<.4?'#c08a3e':sh<.7?'#9a6a2e':'#6e4823';
+    else if(st>0&&q<brn+yel)col=sh<.5?'#e6d34f':'#c2ab35';
+    else col=sh<.3?'#a7e870':sh<.6?'#5cc04f':sh<.85?'#3a9a42':'#2a7a36';
+    px(3+i,1+y,col);
+  }
+  // outline pass
+  const id=x.getImageData(0,0,w,h).data;const a=(i,j)=>i>=0&&j>=0&&i<w&&j<h&&id[(j*w+i)*4+3]>0;
+  x.fillStyle=st>0?'#3a2a1a':'#1f3d24';
+  for(let j=0;j<h-1;j++)for(let i=0;i<w;i++){if(a(i,j))continue;if(a(i-1,j)||a(i+1,j)||a(i,j-1)||a(i,j+1))x.fillRect(i,j,1,1)}
+  t.c=c;t.w=w;t.h=h;t.dirty=false;
+}
+
+/* ---------- state ---------- */
+const G={time:0};
+function reset(demo){
+  G.mode=demo?'title':'play';
+  G.t=0;
+  G.player={x:100,walk:0,cd:0,swing:0,stun:0};
+  G.cam=G.player.x-96;
+  G.trees=[];G.peds=[];G.vehs=[];G.parts=[];G.spores=[];G.free=[];
+  G.nextTreeX=G.cam-6;
+  G.sickStart=G.player.x+90;G.birdStart=G.player.x+250;
+  G.typhoon=false;G.typhoonDone=false;G.storm=0;G.shake=0;G.flash=0;G.light=0;G.sp0=0;G.sp1=0;
+  G.st={cut:0,wrong:0,missed:0,infected:0,shoo:0,protP:0,protC:0,crushP:0,crushC:0,fell:0};
+  G.hints={};G.tips={};
+  G.rain=Array.from({length:90},()=>({x:rnd(0,W+60),y:rnd(0,H)}));
+  for(let i=0;i<8;i++)spawnPed('n',rnd(G.cam-10,G.cam+W+20));
+  for(let i=0;i<3;i++)spawnPed('s',rnd(G.cam-10,G.cam+W+20));
+  spawnVeh(0,rnd(G.cam+20,G.cam+120));spawnVeh(0,rnd(G.cam+180,G.cam+280));
+  spawnVeh(1,rnd(G.cam+40,G.cam+150));spawnVeh(1,rnd(G.cam+200,G.cam+300));
+  genTrees();
+}
+function addTree(x){
+  const sick=x>G.sickStart&&Math.random()<.42;
+  const t={x:Math.round(x),seed:ri(1,1e6),cw:ri(16,20),ch:ri(15,19),th:ri(14,17),sick,stage:sick?(Math.random()<.28?2:1):0,hits:0,cut:false,passed:x<G.player.x,fallen:false,falling:false,fallP:0,fallAt:null,birds:[],birdsIn:false,pr:Math.random(),cr:Math.random(),shake:0,dirty:true};
+  if(sick&&x>G.birdStart&&Math.random()<.2){const n=ri(3,4);for(let i=0;i<n;i++)t.birds.push({a:i/n*Math.PI*2+rnd(-.3,.3),p:0,sx:x+rnd(60,100),sy:rnd(-16,0),gone:false})}
+  buildTree(t);G.trees.push(t);
+}
+function genTrees(){while(G.nextTreeX<G.cam+W+60){addTree(G.nextTreeX);G.nextTreeX+=ri(32,54)}}
+function spawnPed(side,x){
+  const n=side==='n';
+  G.peds.push({x,side,y:n?ri(86,95):ri(166,170),dir:Math.random()<.5?1:-1,sp:rnd(8,17),hc:pick(HAIR),cc:pick(SHIRT),pc:pick(PANTS),sc:pick(SKIN),walk:rnd(0,10),crushed:false});
+}
+function spawnVeh(lane,x){
+  const scoot=Math.random()<(lane===0?.55:.35);
+  G.vehs.push({lane,x,type:scoot?'scoot':'car',w:scoot?14:24,col:pick(CARCOL),helm:pick(['#ffcf3a','#f4f4f4','#e5484d','#3b82f6']),shirt:pick(SHIRT),speed:lane===0?rnd(52,82):rnd(42,70),cur:0,crushed:false});
+}
+const pot=t=>({p:1+(t.pr<.5?0:1)+(t.stage>=2?1:0),c:(t.cr<.22+.2*t.stage)?1:0});
+function birdPos(t,b){
+  const cx=t.x,cy=BASE-t.h+t.ch/2+1,ang=G.time*2.4+b.a;
+  const tx=cx+Math.cos(ang)*(t.cw/2+3),ty=cy+Math.sin(ang*1.7)*5-2;
+  const e=1-Math.pow(1-b.p,3);
+  return{x:b.sx+(tx-b.sx)*e,y:b.sy+(ty-b.sy)*e,right:b.p<1?false:-Math.sin(ang)>0};
+}
+
+/* ---------- ui helpers ---------- */
+const fx=document.getElementById('fx'),toastBox=document.getElementById('toast');
+function float(wx,y,text,cls){const el=document.createElement('div');el.className='ft '+(cls||'');el.textContent=text;el.style.left=((wx-G.cam)/W*100)+'%';el.style.top=(y/H*100)+'%';fx.appendChild(el);setTimeout(()=>el.remove(),1000)}
+function toast(text,cls,ms){while(toastBox.children.length>2)toastBox.firstChild.remove();const el=document.createElement('div');el.className='toast '+(cls||'');el.textContent=text;if(ms)el.style.animationDuration=ms+'ms';toastBox.appendChild(el);setTimeout(()=>el.remove(),ms||2800)}
+function tip(key,text,gap){const now=G.time;if(G.tips[key]&&now-G.tips[key]<gap)return;G.tips[key]=now;toast(text,'tip',4500)}
+function burst(x,y,n,cols,spd=40,g=120){for(let i=0;i<n;i++)G.parts.push({x,y,vx:rnd(-spd,spd),vy:rnd(-spd*1.4,-spd*.2),g,life:rnd(.35,.8),col:pick(cols),s:Math.random()<.3?2:1})}
+
+/* ---------- sound ---------- */
+let AC=null,soundOn=true;
+function ac(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)()}catch(e){return null}}if(AC.state==='suspended')AC.resume();return AC}
+function tone(f1,f2,dur,type='square',vol=.06,delay=0){const a=soundOn&&ac();if(!a)return;const t0=a.currentTime+delay,o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.setValueAtTime(f1,t0);o.frequency.exponentialRampToValueAtTime(Math.max(30,f2),t0+dur);g.gain.setValueAtTime(vol,t0);g.gain.exponentialRampToValueAtTime(.0001,t0+dur);o.connect(g).connect(a.destination);o.start(t0);o.stop(t0+dur+.02)}
+function noise(dur,vol=.12,freq=800,delay=0){const a=soundOn&&ac();if(!a)return;const n=Math.floor(a.sampleRate*dur),b=a.createBuffer(1,n,a.sampleRate),d=b.getChannelData(0);for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*(1-i/n);const s=a.createBufferSource();s.buffer=b;const f=a.createBiquadFilter();f.type='lowpass';f.frequency.value=freq;const g=a.createGain();g.gain.value=vol;s.connect(f).connect(g).connect(a.destination);s.start(a.currentTime+delay)}
+function snd(k){switch(k){
+  case'chop':noise(.08,.25,1800);tone(220,90,.08,'square',.05);break;
+  case'chop2':noise(.12,.3,1400);tone(180,60,.15,'square',.06);tone(660,990,.09,'square',.035,.09);break;
+  case'wrong':tone(210,80,.3,'sawtooth',.06);break;
+  case'shoo':tone(1400,2200,.06,'square',.035);tone(1600,2500,.06,'square',.035,.07);break;
+  case'whiff':noise(.05,.07,3000);break;
+  case'creak':tone(150,60,.6,'sawtooth',.035);break;
+  case'crash':noise(.5,.35,450);break;
+  case'storm':noise(1.6,.18,320);break;
+  case'infect':tone(320,160,.22,'triangle',.06);break;
+  case'end':[523,659,784,1046].forEach((f,i)=>tone(f,f,.12,'square',.045,i*.1));break;
+}}
+
+/* ---------- gameplay ---------- */
+function chop(){
+  if(G.mode!=='play')return;
+  const P=G.player;if(P.cd>0||P.stun>0)return;
+  P.cd=.2;P.swing=.2;
+  const reach=P.x+9;let best=null,bd=99;
+  for(const t of G.trees){if(t.cut||t.falling||t.fallen)continue;const d=Math.abs(t.x-reach);if(d<=13&&d<bd){bd=d;best=t}}
+  if(!best){snd('whiff');return}
+  const t=best;t.shake=.2;
+  const guards=t.birds.filter(b=>!b.gone&&t.birdsIn);
+  if(guards.length){
+    const n=Math.min(2,guards.length);
+    for(let i=0;i<n;i++){const b=guards[i],pos=birdPos(t,b);b.gone=true;G.free.push({x:pos.x,y:pos.y,vx:rnd(-50,30),vy:rnd(-85,-50),a:rnd(0,6)})}
+    G.st.shoo+=n;snd('shoo');
+    const left=guards.length-n;
+    float(t.x,BASE-t.h-4,left>0?`噓！還有 ${left} 隻`:'鳥群散了！','warn');
+    if(!G.hints.bird){G.hints.bird=1;toast('綠鳥護著樹不讓砍，連按「砍」把牠們趕走')}
+    return;
+  }
+  burst(t.x,BASE-8,8,t.sick?['#c58b3c','#7a4f22','#e0b35a']:['#e0b47a','#a5743f','#5cc04f']);
+  if(t.sick){
+    t.hits++;const need=t.stage>=3?2:1;
+    if(t.hits>=need){
+      t.cut=true;const p=pot(t);G.st.cut++;G.st.protP+=p.p;G.st.protC+=p.c;
+      float(t.x,BASE-t.h,`守護 ${p.p}人${p.c?` ${p.c}車`:''}`,'good');snd('chop2');
+      burst(t.x,BASE-t.h/2,14,['#c08a3e','#9a6a2e','#e6d34f'],50,80);
+    }else{float(t.x,BASE-t.h,'末期！再一下','warn');snd('chop')}
+  }else{
+    t.cut=true;G.st.wrong++;G.flash=.25;snd('wrong');
+    float(t.x,BASE-t.h,'誤砍健康樹！','bad');
+    burst(t.x,BASE-t.h/2,12,['#5cc04f','#3a9a42','#a7e870'],50,80);
+    if(!G.hints.wrong){G.hints.wrong=1;toast('那是健康的樹，看清楚葉色和樹根再砍','bad')}
+  }
+}
+function onMissed(t){
+  G.st.missed++;
+  if(t.stage<3){t.stage++;buildTree(t)}
+  float(t.x,BASE-t.h,'病情惡化','warn');snd('infect');
+  const free=o=>o!==t&&!o.sick&&!o.cut&&!o.fallen&&!o.falling;
+  const behind=G.trees.filter(o=>free(o)&&o.x<t.x&&t.x-o.x<70).sort((a,b)=>b.x-a.x)[0];
+  const ahead=G.trees.filter(o=>free(o)&&o.x>t.x&&o.x-t.x<150&&!o.passed).sort((a,b)=>a.x-b.x)[0];
+  const tg=[behind,ahead].filter(Boolean);
+  tg.forEach(o=>{o.targeted=true;G.spores.push({x0:t.x,y0:BASE-4,x1:o.x,y1:BASE-4,t:0,dur:.9,tree:o})});
+  if(tg.length)tip('infect','褐根病主要透過根系接觸或帶菌土壤傳染，因此與病樹根系相鄰的樹木風險很高！',8);
+  else toast('漏砍：病情惡化','bad');
+}
+function infect(o){
+  if(o.cut||o.fallen||o.sick)return;
+  o.sick=true;o.stage=1;o.infected=true;o.hits=0;buildTree(o);G.st.infected++;
+  float(o.x,BASE-o.h,'被感染','warn');burst(o.x,BASE-4,10,['#c58b3c','#7a4f22']);
+}
+function startTyphoon(){
+  G.typhoon=true;toast('颱風來襲！病樹撐不住了，快砍！','big');snd('storm');
+}
+function fallOff(t,acc){
+  t.fallen=true;t.offscreen=true;const p=pot(t);
+  G.st.crushP+=p.p;G.st.crushC+=p.c;G.st.fell++;acc[0]++;acc[1]+=p.p;acc[2]+=p.c;
+}
+function startFall(t){t.falling=true;t.fallP=0;snd('creak');tip('fall','樹木一旦染病，抗颱能力會大幅弱化',8);t.birds.forEach(b=>{if(!b.gone&&t.birdsIn){const pos=birdPos(t,b);b.gone=true;G.free.push({x:pos.x,y:pos.y,vx:rnd(-60,20),vy:rnd(-90,-60),a:0})}})}
+function land(t){
+  t.falling=false;t.fallen=true;t.fallP=1;G.shake=.35;G.st.fell++;snd('crash');
+  const zl=t.x-t.cw/2,zr=t.x+t.cw/2,reach=BASE+t.h;
+  t.reachCar=reach>=110;
+  let p=0,c=0;
+  for(const e of G.peds){if(e.crushed||e.side!=='n')continue;if(Math.abs(e.x-t.x)<=t.cw/2+2&&e.y<=reach+2){e.crushed=true;p++}}
+  if(t.reachCar)for(const v of G.vehs){if(v.crushed||v.lane!==0)continue;if(v.x+v.w/2>zl&&v.x-v.w/2<zr){v.crushed=true;c++}}
+  G.st.crushP+=p;G.st.crushC+=c;
+  if(Math.abs(G.player.x-t.x)<t.cw/2+2){G.player.stun=1.3;float(G.player.x,BASE,'哎唷！','bad')}
+  float(t.x,BASE+t.h/2,p||c?`壓到 ${p?p+'人':''}${p&&c?' ':''}${c?c+'車':''}`:'病樹倒塌！',p||c?'bad':'warn');
+  burst(t.x,BASE+t.h-4,18,['#c9bfae','#9aa3ad','#7a5230'],60,60);
+}
+function endGame(){
+  G.mode='over';snd('end');
+  let rn=0,rp=0,rc=0;
+  for(const t of G.trees)if(t.sick&&!t.cut&&!t.fallen&&!t.falling){rn++;const p=pot(t);rp+=p.p;rc+=p.c}
+  const s=G.st,score=(s.protP+s.protC)*10-(s.crushP+s.crushC)*12-s.wrong*15-(rp+rc)*4;
+  const grade=score>=380?['S','行道樹守護神']:score>=240?['A','可靠的清除隊員']:score>=100?['B','還算稱職，再練練']:['C','颱風過後一片狼藉'];
+  const sub=s.fell?`颱風吹倒了 ${s.fell} 棵沒砍掉的病樹，壓到 <b>${s.crushP}</b> 位路人、<b>${s.crushC}</b> 輛車。`:'颱風來的時候，路上沒有一棵病樹倒下。';
+  document.getElementById('card').innerHTML=`
+    <div class="eyebrow">PATROL COMPLETE</div>
+    <div class="result" style="display:grid;gap:12px">
+      <div class="hero">你守護了<b>${s.protP}</b>位路人、<b>${s.protC}</b>輛車</div>
+      <p class="sub">${sub}</p>
+      <div class="grade"><div class="g">${grade[0]}</div><span>${grade[1]}</span></div>
+      <dl class="stats">
+        <div><dt>砍除病樹</dt><dd>${s.cut}</dd></div>
+        <div><dt>誤砍健康樹</dt><dd>${s.wrong}</dd></div>
+        <div><dt>漏砍病樹</dt><dd>${s.missed}</dd></div>
+        <div><dt>被感染的樹</dt><dd>${s.infected}</dd></div>
+        <div><dt>趕走綠鳥</dt><dd>${s.shoo}</dd></div>
+        <div><dt>倒塌病樹</dt><dd>${s.fell}</dd></div>
+      </dl>
+      ${rn?`<p class="risk">路上還有 ${rn} 棵病樹沒處理，下一次颱風可能再壓到約 ${rp} 人、${rc} 輛車。</p>`:''}
+      <button class="btn" id="again" type="button">再巡一次</button>
+    </div>`;
+  overlay.hidden=false;
+  document.getElementById('again').addEventListener('click',startGame);
+}
+
+/* ---------- update ---------- */
+function update(dt){
+  const P=G.player,play=G.mode==='play';
+  if(play)G.t+=dt;
+  const sp=P.stun>0?0:34;
+  P.x+=sp*dt;P.walk+=sp*dt;G.cam=P.x-96;
+  P.cd=Math.max(0,P.cd-dt);P.swing=Math.max(0,P.swing-dt);P.stun=Math.max(0,P.stun-dt);
+  G.shake=Math.max(0,G.shake-dt);G.flash=Math.max(0,G.flash-dt);G.light=Math.max(0,G.light-dt);
+  genTrees();
+
+  // pedestrians
+  for(const p of G.peds){
+    if(p.crushed)continue;
+    const nx=p.x+p.dir*p.sp*dt;
+    if(p.side==='n')for(const t of G.trees){if(t.fallen&&!t.offscreen){const r=t.cw/2+4;if(Math.abs(nx-t.x)<r&&Math.abs(p.x-t.x)>=r){p.dir*=-1;break}}}
+    p.x+=p.dir*p.sp*dt;p.walk+=p.sp*dt;
+  }
+  G.peds=G.peds.filter(p=>p.x>G.cam-40&&p.x<G.cam+W+70);
+  if(G.peds.filter(p=>p.side==='n'&&!p.crushed).length<8)spawnPed('n',G.cam+W+rnd(8,50));
+  if(G.peds.filter(p=>p.side==='s').length<3)spawnPed('s',G.cam+W+rnd(8,50));
+
+  // vehicles
+  for(const lane of[0,1]){
+    const L=G.vehs.filter(v=>v.lane===lane).sort((a,b)=>lane===0?b.x-a.x:a.x-b.x);
+    let ahead=null;
+    for(const v of L){
+      if(v.crushed){v.cur=0;ahead=v;continue}
+      let cur=v.speed;
+      if(lane===0)for(const t of G.trees){if(t.fallen&&t.reachCar&&!t.offscreen){const zl=t.x-t.cw/2-3,front=v.x+v.w/2;if(front<=zl+1&&zl-front<12)cur=0}}
+      if(ahead){const gap=lane===0?(ahead.x-ahead.w/2)-(v.x+v.w/2):(v.x-v.w/2)-(ahead.x+ahead.w/2);if(gap<6)cur=Math.min(cur,ahead.cur);if(gap<2)cur=0}
+      v.cur=cur;v.x+=(lane===0?1:-1)*cur*dt;ahead=v;
+    }
+  }
+  G.vehs=G.vehs.filter(v=>v.x>G.cam-90&&v.x<G.cam+W+90);
+  G.sp0-=dt;G.sp1-=dt;
+  if(G.sp0<=0&&G.vehs.filter(v=>v.lane===0).length<4){const x=G.cam-30;if(!G.vehs.some(v=>v.lane===0&&Math.abs(v.x-x)<36))spawnVeh(0,x);G.sp0=rnd(.7,2)}
+  if(G.sp1<=0&&G.vehs.filter(v=>v.lane===1).length<4){const x=G.cam+W+30;if(!G.vehs.some(v=>v.lane===1&&Math.abs(v.x-x)<36))spawnVeh(1,x);G.sp1=rnd(.9,2.4)}
+
+  // trees
+  for(const t of G.trees){
+    t.shake=Math.max(0,t.shake-dt);
+    if(t.birds.length&&!t.birdsIn&&t.x-G.cam<W+6){t.birdsIn=true;if(play&&!G.hints.birdIn){G.hints.birdIn=1;toast('一群綠鳥飛來護住病樹了！')}}
+    if(t.birdsIn)for(const b of t.birds)b.p=Math.min(1,b.p+dt/.9);
+    if(t.falling){t.fallP+=dt/.75;if(t.fallP>=1)land(t)}
+    if(play&&!t.passed&&t.x<P.x-12){t.passed=true;if(t.sick&&!t.cut&&!t.fallen&&!t.falling)onMissed(t)}
+  }
+  for(const b of G.free){b.x+=b.vx*dt;b.y+=b.vy*dt;b.vy-=20*dt}
+  G.free=G.free.filter(b=>b.y>-20);
+
+  for(const s of G.spores){s.t+=dt;if(s.t>=s.dur&&!s.done){s.done=true;infect(s.tree);snd('infect')}}
+  G.spores=G.spores.filter(s=>!s.done);
+
+  // typhoon
+  if(play){
+    if(!G.typhoon&&!G.typhoonDone&&G.t>=30)startTyphoon();
+    if(G.typhoon&&G.t>=44){G.typhoon=false;G.typhoonDone=true;for(const t of G.trees)if(!t.falling&&!t.fallen)t.fallAt=null;toast('颱風遠離了，繼續清除病樹')}
+    if(G.typhoon){
+      const acc=[0,0,0];
+      for(const t of G.trees){
+        if(!t.sick||t.cut||t.fallen||t.falling)continue;
+        if(t.x<G.cam-26)fallOff(t,acc);
+        else if(t.x<G.cam+W-6){if(t.fallAt==null)t.fallAt=G.t+rnd(1.4,4.2)-(t.stage-1)*.5;else if(G.t>=t.fallAt)startFall(t)}
+      }
+      if(acc[0]){tip('fall','樹木一旦染病，抗颱能力會大幅弱化',8);toast(`畫面外 ${acc[0]} 棵漏砍病樹倒塌，壓到 ${acc[1]} 人、${acc[2]} 輛車`,'bad')}
+      if(Math.random()<dt*.25)G.light=.12;
+      if(Math.random()<dt*14)G.parts.push({x:G.cam+W+4,y:rnd(20,150),vx:rnd(-160,-90),vy:rnd(-10,25),g:0,life:3,col:pick(['#5cc04f','#3a9a42','#c08a3e','#e6d34f']),s:1});
+    }
+    if(G.t>=60)endGame();
+  }
+  G.storm+=((G.typhoon?1:0)-G.storm)*Math.min(1,dt*1.4);
+  for(const r of G.rain){r.x-=80*dt;r.y+=250*dt;if(r.y>H){r.y-=H+6;r.x=rnd(0,W+60)}if(r.x<-6)r.x+=W+60}
+  for(const p of G.parts){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=p.g*dt;p.life-=dt}
+  G.parts=G.parts.filter(p=>p.life>0);
+}
+
+/* ---------- draw ---------- */
+function rect(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(x,y,w,h)}
+function drawBG(){
+  const s=G.storm,cam=G.cam;
+  rect(0,0,W,14,mix('#7cc8f5','#5d6f86',s));rect(0,14,W,12,mix('#9bd6f8','#6f8299',s));rect(0,26,W,16,mix('#c2e8fb','#8597ab',s));
+  // clouds
+  const cb=cam*.08;
+  for(let i=Math.floor(cb/90)-1;i<Math.floor(cb/90)+5;i++){const x=Math.round(i*90-cb+hash(i)*40),y=4+Math.floor(hash(i+7)*14);const cc=mix('#ffffff','#9aa6b6',s);rect(x,y,22,4,cc);rect(x+4,y-3,12,3,cc);rect(x+2,y+4,18,1,mix('#dceefa','#7f8ea2',s))}
+  // hills
+  const mc=mix('#a9d9b6','#71877c',s);ctx.fillStyle=mc;
+  for(let x=0;x<W;x+=2){const wx=x+cam*.15;const h=Math.round(26+5*Math.sin(wx/31)+3*Math.sin(wx/13));ctx.fillRect(x,h,2,42-h)}
+  // buildings
+  const base=cam*.4,slot=26;
+  for(let i=Math.floor(base/slot)-1;i<Math.floor(base/slot)+15;i++){
+    const hh=10+Math.floor(hash(i)*16),bw=15+Math.floor(hash(i+3)*8),bx=Math.round(i*slot-base);
+    const col=['#dfe8f1','#cbd8e7','#ece2d4','#d6e2d9'][Math.floor(hash(i+9)*4)];
+    rect(bx,42-hh,bw,hh,mix(col,'#8a97a8',s*.7));rect(bx,42-hh,bw,1,mix('#9fb0c4','#5e6b7c',s));
+    for(let y=42-hh+3;y<40;y+=4)for(let x=bx+2;x<bx+bw-2;x+=4)if(hash(i*31+x+y*7)>.35)rect(x,y,2,2,mix('#8fb0cf','#e9d98a',s*.6));
+  }
+}
+function drawGround(){
+  const cam=G.cam,s=G.storm,off=c=>mix(c,shade(c,.72),s);
+  rect(0,42,W,40,off('#7fd06b'));
+  for(let wx=Math.floor(cam/5)*5;wx<cam+W;wx+=5){const h=hash(wx);const x=Math.round(wx-cam);const y=45+Math.floor(h*997)%34;rect(x,y,2,1,off('#5fb356'));if(h>.93)rect(x+1,y-1,1,1,off('#fff3a0'))}
+  rect(0,81,W,1,off('#5fb356'));
+  rect(0,82,W,16,off('#efe3cf'));rect(0,82,W,1,off('#d4c3a6'));rect(0,90,W,1,off('#e0d2ba'));
+  for(let wx=Math.floor(cam/12)*12;wx<cam+W;wx+=12)rect(Math.round(wx-cam),83,1,15,off('#e0d2ba'));
+  rect(0,98,W,3,off('#b4bcc5'));rect(0,98,W,1,off('#e6eaee'));
+  rect(0,101,W,1,off('#d9423b'));
+  rect(0,102,W,55,off('#5b6370'));
+  for(let wx=Math.floor(cam/7)*7;wx<cam+W;wx+=7){const h=hash(wx*3.1);if(h>.6)rect(Math.round(wx-cam),104+Math.floor(h*700)%52,1,1,off('#666f7d'))}
+  for(let wx=Math.floor(cam/18)*18;wx<cam+W;wx+=18)rect(Math.round(wx-cam),129,10,2,off('#f2ecd8'));
+  rect(0,155,W,1,off('#f2ecd8'));rect(0,104,W,1,off('#f2ecd8'));
+  rect(0,157,W,3,off('#b4bcc5'));rect(0,157,W,1,off('#e6eaee'));
+  rect(0,160,W,12,off('#efe3cf'));rect(0,166,W,1,off('#e0d2ba'));
+  for(let wx=Math.floor(cam/12)*12;wx<cam+W;wx+=12)rect(Math.round(wx-cam),160,1,12,off('#e0d2ba'));
+  rect(0,172,W,8,off('#7fd06b'));
+}
+function drawStump(t,sx){
+  const x0=sx-3,sick=t.sick;
+  rect(x0-1,74,8,6,'#2b1d12');rect(x0,75,6,5,'#7a5230');rect(x0,75,1,5,'#5a3a20');
+  rect(x0,75,6,2,sick?'#5a3a20':'#e0b47a');rect(x0+2,75,2,1,sick?'#2f1d0e':'#b98a52');
+  if(sick){rect(x0,78,2,2,'#c58b3c');rect(x0+4,77,2,3,'#a8742e');rect(x0-1,79,1,1,'#e0b35a')}
+}
+function drawTreeUp(t,sx){
+  if(t.dirty)buildTree(t);
+  const k=G.storm;const sk=k*(.07+Math.sin(G.time*5+t.x*.13)*.09)*(t.sick?1.4:1);
+  ctx.save();ctx.translate(sx+(t.shake>0?ri(-1,1):0),BASE);ctx.transform(1,0,sk,1,0,0);
+  ctx.drawImage(t.c,-Math.floor(t.w/2),-t.h);ctx.restore();
+}
+function drawTreeLying(t,sx){
+  const e=t.fallen?1:t.fallP*t.fallP;const sy=Math.cos(Math.PI*e);
+  rect(sx-5,77,10,4,'#4a2f18');rect(sx-3,79,2,1,'#c58b3c');rect(sx+2,78,1,1,'#e0b35a');
+  ctx.save();ctx.translate(sx,BASE);ctx.scale(1,Math.abs(sy)<.08?(sy<0?-.08:.08):sy);
+  ctx.drawImage(t.c,-Math.floor(t.w/2),-t.h);ctx.restore();
+}
+function stars(x,y){for(let i=0;i<3;i++){const a=G.time*5+i*2.1;rect(Math.round(x+Math.cos(a)*5),Math.round(y+Math.sin(a)*2),1,1,'#ffcf3a')}}
+function drawPed(p,sx){
+  const img=pedSprite(p,Math.floor(p.walk/5)%2);
+  if(p.crushed){ctx.save();ctx.translate(sx,p.y);ctx.scale(1,.4);ctx.drawImage(img,-4,-14);ctx.restore();stars(sx,p.y-8);return}
+  rect(sx-3,p.y,7,1,'rgba(29,36,51,.18)');ctx.drawImage(img,sx-4,p.y-14);
+}
+function drawVeh(v,sx){
+  const img=vehSprite(v),y=v.lane===0?120:150;
+  if(v.crushed){ctx.save();ctx.translate(sx,y);ctx.scale(1,.7);ctx.drawImage(img,-Math.floor(img.width/2),-img.height);ctx.restore();stars(sx,y-12);return}
+  rect(sx-v.w/2+1,y,v.w-2,1,'rgba(29,36,51,.22)');
+  ctx.drawImage(img,sx-Math.floor(img.width/2),y-img.height+(v.cur>0&&Math.floor(G.time*8+v.x)%7===0?-1:0));
+}
+function drawPlayer(sx){
+  const P=G.player,f=P.stun>0?0:Math.floor(P.walk/6)%2,y=96;
+  rect(sx-4,y,9,1,'rgba(29,36,51,.22)');
+  ctx.drawImage(f?P_B:P_A,sx-6,y-16);
+  let ang=.4;
+  if(P.swing>0){const p=1-P.swing/.2;ang=p<.35?.4+(-1.3-.4)*(p/.35):-1.3+(1.9+1.3)*((p-.35)/.65)}
+  ctx.save();ctx.translate(sx+3,y-5);ctx.rotate(ang);ctx.drawImage(AXE,-3,-8);ctx.restore();
+  if(P.stun>0)stars(sx,y-17);
+}
+function draw(){
+  const ox=G.shake>0?ri(-1,1):0,oy=G.shake>0?ri(-1,1):0;
+  ctx.setTransform(1,0,0,1,ox,oy);
+  drawBG();drawGround();
+  const cam=G.cam,vis=x=>x>-30&&x<W+30;
+  for(const t of G.trees){const sx=Math.round(t.x-cam);if(!vis(sx)||t.offscreen)continue;if(t.cut)drawStump(t,sx);else if(!t.falling&&!t.fallen)drawTreeUp(t,sx)}
+  for(const p of G.peds)if(p.crushed)drawPed(p,Math.round(p.x-cam));
+  for(const v of G.vehs)if(v.crushed)drawVeh(v,Math.round(v.x-cam));
+  for(const t of G.trees){const sx=Math.round(t.x-cam);if(vis(sx)&&t.fallen&&!t.offscreen)drawTreeLying(t,sx)}
+  const list=[];
+  for(const p of G.peds)if(!p.crushed)list.push([p.y,()=>drawPed(p,Math.round(p.x-cam))]);
+  for(const v of G.vehs)if(!v.crushed)list.push([v.lane===0?120:150,()=>drawVeh(v,Math.round(v.x-cam))]);
+  list.push([96.5,()=>drawPlayer(Math.round(G.player.x-cam))]);
+  list.sort((a,b)=>a[0]-b[0]).forEach(i=>i[1]());
+  for(const t of G.trees){const sx=Math.round(t.x-cam);if(vis(sx)&&t.falling)drawTreeLying(t,sx)}
+  // birds
+  for(const t of G.trees){if(!t.birdsIn||t.cut||t.fallen||t.falling)continue;for(const b of t.birds){if(b.gone)continue;const p=birdPos(t,b);ctx.drawImage(BIRDS[p.right?0:1][Math.floor(G.time*10+b.a*3)%2],Math.round(p.x-cam-3),Math.round(p.y-2))}}
+  for(const b of G.free)ctx.drawImage(BIRDS[b.vx>0?0:1][Math.floor(G.time*14)%2],Math.round(b.x-cam-3),Math.round(b.y-2));
+  // spores
+  for(const s of G.spores){const p=s.t/s.dur;for(let k=0;k<4;k++){const q=Math.max(0,p-k*.06);const x=s.x0+(s.x1-s.x0)*q,y=s.y0+(s.y1-s.y0)*q-Math.sin(q*Math.PI)*10;rect(Math.round(x-cam),Math.round(y),k?1:2,k?1:2,k?'#a8742e':'#7a4f22')}}
+  for(const p of G.parts){const x=Math.round(p.x-(p.g===0?0:0)-cam);rect(x,Math.round(p.y),p.s,p.s,p.col)}
+  // target marker
+  if(G.mode==='play'&&Math.floor(G.time*4)%2===0){
+    const reach=G.player.x+9;let best=null,bd=99;
+    for(const t of G.trees){if(t.cut||t.falling||t.fallen)continue;const d=Math.abs(t.x-reach);if(d<=13&&d<bd){bd=d;best=t}}
+    if(best){const x=Math.round(best.x-cam)-2,y=BASE-best.h-7;rect(x-1,y-1,7,4,'#1d2433');rect(x+1,y+3,3,1,'#1d2433');rect(x+2,y+4,1,1,'#1d2433');rect(x,y,5,1,'#ffffff');rect(x+1,y+1,3,1,'#ffffff');rect(x+2,y+2,1,1,'#ffffff')}
+  }
+  // weather
+  if(G.storm>.01){
+    rect(-2,-2,W+4,H+4,`rgba(28,42,74,${.3*G.storm})`);
+    ctx.fillStyle=`rgba(226,242,255,${.75*G.storm})`;
+    const n=Math.floor(G.storm*G.rain.length);
+    for(let i=0;i<n;i++){const r=G.rain[i];const x=Math.round(r.x),y=Math.round(r.y);ctx.fillRect(x,y,1,2);ctx.fillRect(x-1,y+2,1,2)}
+  }
+  if(G.light>0)rect(-2,-2,W+4,H+4,`rgba(255,255,255,${G.light*2})`);
+  if(G.flash>0)rect(-2,-2,W+4,H+4,`rgba(229,72,77,${G.flash})`);
+}
+
+/* ---------- HUD & loop ---------- */
+const $=id=>document.getElementById(id);
+const hud={time:$('h-time'),fill:$('h-fill'),cut:$('h-cut'),guard:$('h-guard'),wrong:$('h-wrong'),miss:$('h-miss'),bar:$('bar')};
+let hudLast='';
+function updHUD(){
+  const s=G.st,t=G.mode==='title'?0:Math.min(60,G.t);
+  const k=[Math.ceil(60-t),s.cut,s.protP,s.protC,s.wrong,s.missed,G.typhoon].join('|');
+  hud.fill.style.width=(t/60*100)+'%';
+  if(k===hudLast)return;hudLast=k;
+  hud.time.textContent=String(Math.ceil(60-t)).padStart(2,'0');
+  hud.cut.textContent=s.cut;hud.guard.textContent=`${s.protP}人 ${s.protC}車`;hud.wrong.textContent=s.wrong;hud.miss.textContent=s.missed;
+  hud.bar.classList.toggle('storm',G.typhoon);
+}
+let last=performance.now();
+function frame(now){
+  const dt=Math.min(.05,(now-last)/1000);last=now;G.time+=dt;
+  update(dt);draw();updHUD();
+  requestAnimationFrame(frame);
+}
+
+const overlay=$('overlay');
+function startGame(){
+  ac();reset(false);overlay.hidden=true;hudLast='';
+  toastBox.innerHTML='';fx.innerHTML='';
+  toast('出發巡邏！走到樹前按「砍」');
+}
+$('start').addEventListener('click',startGame);
+const chopBtn=$('chop');
+chopBtn.addEventListener('pointerdown',e=>{e.preventDefault();if(G.mode==='play')chop();else startGame()});
+chopBtn.addEventListener('click',e=>{if(e.detail===0){if(G.mode==='play')chop();else startGame()}});
+cv.addEventListener('pointerdown',e=>{if(G.mode==='play'){e.preventDefault();chop()}});
+addEventListener('keydown',e=>{
+  const k=e.key;const ck=k===' '||k==='j'||k==='J'||k==='Enter'||k==='ArrowDown';
+  if(!ck||e.repeat)return;
+  if(e.target.tagName==='BUTTON'&&(k===' '||k==='Enter'))return;
+  e.preventDefault();
+  if(G.mode==='play')chop();else startGame();
+});
+$('sound').addEventListener('click',e=>{soundOn=!soundOn;e.currentTarget.textContent=soundOn?'音效：開':'音效：關';e.currentTarget.setAttribute('aria-pressed',soundOn)});
+
+// field guide sprites
+document.querySelectorAll('.gi canvas[data-stage]').forEach(c=>{
+  const t={seed:4242,cw:18,ch:17,th:15,stage:+c.dataset.stage};buildTree(t);
+  c.width=t.w+4;c.height=t.h+2;const x=c.getContext('2d');x.drawImage(t.c,2,1);
+});
+document.querySelectorAll('.gi canvas[data-bird]').forEach(c=>{
+  c.width=26;c.height=18;const x=c.getContext('2d');
+  x.drawImage(BIRDS[0][0],2,3);x.drawImage(BIRDS[1][1],14,1);x.drawImage(BIRDS[0][1],9,11);
+});
+
+reset(true);
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
