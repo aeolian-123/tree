@@ -142,27 +142,6 @@ canvas#cv{display:block;width:100%;height:auto;image-rendering:pixelated;image-r
 .keys{font-family:var(--f-pix);font-size:9px;color:var(--muted);line-height:1.8}
 #sound{margin-left:auto;font:700 13px var(--f-cjk);background:var(--panel);color:var(--ink);border:3px solid var(--ink);padding:6px 10px;cursor:pointer}
 
-.board{display:grid;gap:12px}
-.board-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px}
-.board-head h3{margin:0;font-size:18px;font-weight:900}
-.board-status{margin:0;font-size:13px;color:var(--muted);font-weight:500}
-.board-mine{margin:0;font-weight:900;font-size:15px;background:#fffbe8;border:3px solid var(--ink);padding:8px 12px}
-.boards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
-.bcol{background:var(--panel);border:4px solid var(--ink);min-width:0}
-.bcol.hero{box-shadow:5px 5px 0 #1f8a39}.bcol.crush{box-shadow:5px 5px 0 #c4472f}
-.bt{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:8px 12px;border-bottom:4px solid var(--ink)}
-.bt b{font-size:18px;font-weight:900}
-.hero .bt{background:#e3f6dd}.crush .bt{background:#fde3dc}
-.bt span{font-size:12px;color:var(--muted);font-weight:700}
-.bcol ol{list-style:none;margin:0;padding:6px 0;counter-reset:r}
-.bcol li{display:grid;grid-template-columns:30px 1fr auto;align-items:center;gap:8px;padding:5px 12px;font-size:14px;counter-increment:r}
-.bcol li::before{content:counter(r);font-family:var(--f-pix);font-size:10px;width:24px;height:22px;display:grid;place-items:center;background:#edf1ea;color:var(--ink)}
-.bcol li:nth-child(1)::before{background:var(--helmet)}.bcol li:nth-child(2)::before{background:#d6dde6}.bcol li:nth-child(3)::before{background:#e6b98a}
-.bcol li .nm{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bcol li .vl{font-family:var(--f-pix);font-size:10px;font-variant-numeric:tabular-nums;white-space:nowrap}
-.bcol li.me{background:#fffbe8;outline:2px solid var(--ink);outline-offset:-2px}
-.bcol li.empty{grid-template-columns:1fr;color:var(--muted);font-weight:500}
-.bcol li.empty::before{display:none}
 .guide{display:grid;gap:12px}
 .guide h3{margin:0;font-size:18px;font-weight:900}
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
@@ -236,15 +215,6 @@ body.playing .stage{background:#8fd3ff}
     </div>
   </section>
 
-  <section class="board" id="board" aria-label="排行榜">
-    <div class="board-head"><h3>排行榜</h3><p class="board-status" id="b-status">讀取中…</p></div>
-    <p class="board-mine" id="b-mine" hidden></p>
-    <div class="boards">
-      <div class="bcol hero"><div class="bt"><b>英雄榜</b><span>守護最多人車</span></div><ol id="b-hero"></ol></div>
-      <div class="bcol crush"><div class="bt"><b>壓扁榜</b><span>颱風壓到最多人車</span></div><ol id="b-crush"></ol></div>
-    </div>
-  </section>
-
   <section class="guide" aria-label="辨識指南">
     <h3>辨識指南</h3>
     <div class="cards">
@@ -262,8 +232,6 @@ body.playing .stage{background:#8fd3ff}
 (()=>{
 const cv=document.getElementById('cv');
 const ctx=cv.getContext('2d');
-/* 排行榜：貼上 Google Apps Script 網頁應用程式網址（見 README），留空則停用 */
-const LEADERBOARD_URL='';
 const W=240,H=124,OY=32,PX=72,BASE=80;
 ctx.imageSmoothingEnabled=false;
 
@@ -518,7 +486,6 @@ function endGame(){
       </div>
       <button class="btn" id="again" type="button">再巡一次</button>
     </div>`;
-  submitScore();
   tagEl.hidden=true;document.body.classList.remove('playing');stageEl.classList.add('done');overlay.hidden=false;drawCompare();
   try{overlay.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})}catch(e){}
   document.getElementById('again').addEventListener('click',startGame);
@@ -794,43 +761,6 @@ document.querySelectorAll('.gi canvas[data-bird]').forEach(c=>{
   c.width=26;c.height=18;const x=c.getContext('2d');
   x.drawImage(BIRDS[0][0],2,3);x.drawImage(BIRDS[1][1],14,1);x.drawImage(BIRDS[0][1],9,11);
 });
-
-/* ---------- leaderboard ---------- */
-const bStatus=$('b-status'),bMine=$('b-mine'),bHero=$('b-hero'),bCrush=$('b-crush');
-let myRunId=null;
-function li(text,cls){const l=document.createElement('li');l.className=cls||'';l.textContent=text;return l}
-function fillList(ol,rows,kind){
-  ol.innerHTML='';
-  if(!rows||!rows.length){ol.appendChild(li(kind==='hero'?'還沒有人上榜，成為第一位英雄！':'還沒有人上榜','empty'));return}
-  rows.forEach(r=>{
-    const el=document.createElement('li');if(r.id&&r.id===myRunId)el.className='me';
-    const nm=document.createElement('span');nm.className='nm';nm.textContent=r.name||'清除隊員';
-    const vl=document.createElement('span');vl.className='vl';
-    vl.textContent=kind==='hero'?`${r.protP}人 ${r.protC}車`:`${r.crushP}人 ${r.crushC}車`;
-    el.append(nm,vl);ol.appendChild(el);
-  });
-}
-async function loadBoard(){
-  if(!LEADERBOARD_URL){bStatus.textContent='排行榜在正式發布版本啟用。';fillList(bHero,[],'hero');fillList(bCrush,[],'crush');return}
-  bStatus.textContent='讀取中…';
-  try{
-    const r=await fetch(LEADERBOARD_URL+'?n=10',{cache:'no-store'});
-    const d=await r.json();
-    fillList(bHero,d.hero,'hero');fillList(bCrush,d.crush,'crush');
-    bStatus.textContent='每局結束自動上傳成績，各列前 10 名。';
-  }catch(e){bStatus.textContent='排行榜暫時連不上，請稍後重新整理。'}
-}
-async function submitScore(){
-  const s=G.st;myRunId=Math.random().toString(36).slice(2,10)+Date.now().toString(36);
-  bMine.hidden=false;bMine.textContent=`${G.name} 這局：守護 ${s.protP} 人 ${s.protC} 車・壓到 ${s.crushP} 人 ${s.crushC} 車`;
-  if(!LEADERBOARD_URL){loadBoard();return}
-  bStatus.textContent='上傳成績中…';
-  try{
-    await fetch(LEADERBOARD_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({id:myRunId,name:G.name,protP:s.protP,protC:s.protC,crushP:s.crushP,crushC:s.crushC})});
-  }catch(e){}
-  loadBoard();
-}
-loadBoard();
 
 reset(true);
 requestAnimationFrame(frame);
